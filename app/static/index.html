@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1f4e79">
+<meta name="description" content="Allège vidéos, images, documents bureautiques et PDF, avec estimation du gain avant lancement.">
+<title>Compression pas à pas</title>
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/png" href="/static/icons/favicon-32.png">
+<link rel="apple-touch-icon" href="/static/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Compression">
+<style>
+  :root { --bg:#f6f5f2; --card:#fff; --ink:#1d1d1b; --muted:#66655f; --line:#e1dfd8; --accent:#1f4e79;
+          --accent-ink:#fff; --ok:#2e7d4f; --warn:#b26a00; --err:#b3261e; --soft:#eef3f8; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#141517; --card:#1e2023; --ink:#ececea; --muted:#a3a29c; --line:#34373b; --accent:#6ea8dc;
+            --accent-ink:#0d1b28; --ok:#6cc495; --warn:#f0b24d; --err:#f2877f; --soft:#1f2a35; }
+  }
+  * { box-sizing:border-box; }
+  html { -webkit-text-size-adjust:100%; }
+  body { margin:0; font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:var(--ink);
+         padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
+  main { max-width:680px; margin:0 auto; padding:28px 16px 40px; }
+  header { display:flex; align-items:center; gap:12px; margin-bottom:6px; }
+  header img { width:40px; height:40px; border-radius:10px; }
+  h1 { font-size:1.45rem; margin:0; }
+  p.sub { color:var(--muted); margin:4px 0 22px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:20px; margin-bottom:16px; }
+  #drop { border:2px dashed var(--line); border-radius:12px; padding:34px 14px; text-align:center; cursor:pointer;
+          color:var(--muted); transition:.15s; }
+  #drop.over, #drop:hover, #drop:focus-visible { border-color:var(--accent); color:var(--accent); outline:none; }
+  #drop strong { display:block; color:var(--ink); font-size:1.05rem; margin-bottom:4px; }
+  .types { font-size:.85rem; margin-top:8px; }
+  .file { display:flex; justify-content:space-between; gap:12px; align-items:flex-start; flex-wrap:wrap; }
+  .file .name { font-weight:600; word-break:break-all; }
+  .file .meta { color:var(--muted); font-size:.9rem; }
+  .note { background:var(--soft); border-radius:8px; padding:8px 12px; font-size:.9rem; margin-top:10px; }
+  fieldset { border:0; padding:0; margin:18px 0 0; }
+  legend { font-size:.85rem; color:var(--muted); margin-bottom:6px; padding:0; }
+  .pills { display:flex; flex-wrap:wrap; gap:8px; }
+  .pills label { position:relative; }
+  .pills input { position:absolute; opacity:0; }
+  .pills span { display:inline-block; padding:8px 14px; border:1px solid var(--line); border-radius:999px; cursor:pointer;
+                font-size:.92rem; min-height:40px; line-height:22px; background:var(--card); }
+  .pills input:checked + span { background:var(--accent); color:var(--accent-ink); border-color:var(--accent); }
+  .pills input:focus-visible + span { outline:2px solid var(--accent); outline-offset:2px; }
+  .check { display:flex; gap:10px; align-items:flex-start; margin-top:16px; font-size:.95rem; cursor:pointer; }
+  .check input { width:20px; height:20px; margin-top:2px; flex:none; accent-color:var(--accent); }
+  .estimate { margin-top:20px; padding:14px 16px; border-radius:10px; background:var(--soft); }
+  .estimate .big { font-size:1.6rem; font-weight:700; }
+  .estimate.ok .big { color:var(--ok); } .estimate.faible .big { color:var(--warn); } .estimate.aucun .big { color:var(--err); }
+  .estimate.faible { border-left:4px solid var(--warn); } .estimate.aucun { border-left:4px solid var(--err); }
+  .actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:18px; }
+  button, a.btn { appearance:none; border:0; border-radius:10px; padding:12px 18px; font:inherit; font-weight:600; cursor:pointer;
+                  text-decoration:none; display:inline-flex; align-items:center; justify-content:center; min-height:46px; }
+  .primary { background:var(--accent); color:var(--accent-ink); }
+  .secondary { background:transparent; color:var(--ink); border:1px solid var(--line); }
+  button:disabled { opacity:.45; cursor:default; }
+  .bar { height:10px; background:var(--line); border-radius:99px; overflow:hidden; margin-top:8px; }
+  .bar > div { height:100%; width:0; background:var(--accent); transition:width .3s; }
+  .bar.indeterminate > div { width:35%; animation:slide 1.2s ease-in-out infinite; }
+  @keyframes slide { from { margin-left:-35%; } to { margin-left:100%; } }
+  .lbl { display:flex; justify-content:space-between; font-size:.9rem; margin-top:16px; gap:10px; }
+  .hidden { display:none !important; }
+  .err { color:var(--err); margin-top:12px; }
+  ul.files { padding-left:18px; margin:10px 0 0; }
+  footer { margin-top:24px; font-size:.8rem; color:var(--muted); text-align:center; }
+  footer a { color:inherit; }
+  #install { margin-left:auto; padding:8px 12px; min-height:38px; font-size:.85rem; }
+  @media (max-width:480px) {
+    main { padding-top:18px; } h1 { font-size:1.25rem; } .card { padding:16px; }
+    .actions button, .actions a.btn { flex:1 1 100%; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <img src="/static/icons/icon-192.png" alt="">
+    <h1>Compression pas à pas</h1>
+    <button id="install" class="secondary hidden" type="button">Installer</button>
+  </header>
+  <p class="sub">Allège vos vidéos, images, documents et PDF <strong>sans changer leur format</strong>. Le gain est estimé avant de lancer le traitement.</p>
+  <p id="iosHint" class="note hidden">Pour installer l'application sur iPhone ou iPad : bouton <strong>Partager</strong> puis <strong>Sur l'écran d'accueil</strong>.</p>
+
+  <!-- 1. Choix du fichier -->
+  <section class="card" id="stepPick">
+    <div id="drop" tabindex="0" role="button" aria-label="Choisir un fichier">
+      <strong>Choisir un fichier</strong>
+      ou le glisser ici
+      <div class="types">Vidéos (MP4, MOV, MKV, WEBM, AVI…) · Images (JPEG, PNG, WEBP, HEIC, TIFF…) · Word, PowerPoint, Excel, LibreOffice, OnlyOffice · PDF</div>
+      <input type="file" id="file" hidden>
+    </div>
+    <div id="upStep" class="hidden">
+      <div class="lbl"><span>Envoi du fichier</span><span id="upPct">0 %</span></div>
+      <div class="bar"><div id="upBar"></div></div>
+    </div>
+    <div id="pickErr" class="err" role="alert"></div>
+  </section>
+
+  <!-- 2. Réglages + estimation -->
+  <section class="card hidden" id="stepOptions">
+    <div class="file">
+      <div><div class="name" id="fName"></div><div class="meta" id="fMeta"></div></div>
+      <button class="secondary" type="button" id="change">Changer de fichier</button>
+    </div>
+    <div id="fNotes"></div>
+    <form id="opts" onsubmit="return false"></form>
+    <div class="estimate" id="est" aria-live="polite">
+      <div id="estWait"><span id="estStage">Estimation du gain…</span><div class="bar indeterminate" id="estBarWrap"><div id="estBar"></div></div></div>
+      <div id="estRes" class="hidden"><div class="big" id="estBig"></div><div id="estMsg"></div></div>
+    </div>
+    <div class="actions">
+      <button class="primary" type="button" id="go" disabled>Lancer la compression</button>
+    </div>
+    <div id="runStep" class="hidden">
+      <div class="lbl"><span id="runStage">En attente</span><span id="runPct"></span></div>
+      <div class="bar" id="runBarWrap"><div id="runBar"></div></div>
+    </div>
+    <div id="optErr" class="err" role="alert"></div>
+  </section>
+
+  <!-- 3. Résultat -->
+  <section class="card hidden" id="stepDone" aria-live="polite">
+    <div class="estimate ok"><div class="big" id="doneBig"></div><div id="doneMsg"></div></div>
+    <ul class="files" id="doneFiles"></ul>
+    <div class="actions">
+      <a class="btn primary" id="dl" href="#">Télécharger</a>
+      <button class="secondary" type="button" id="again">Compresser un autre fichier</button>
+    </div>
+  </section>
+
+  <footer><span id="ver">Compression pas à pas</span> · Licence AGPL-3.0 · <a id="src" href="#">Code source</a><br>Code réalisé avec l'assistance de Claude (IA d'Anthropic)</footer>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+let current = null, estToken = 0, timer = null, deferredInstall = null, lastAdvice = "ok";
+const fmtSize = (n) => n < 1024 ? n + " o" : n < 1048576 ? (n/1024).toFixed(1).replace(".", ",") + " Ko"
+  : n < 1073741824 ? (n/1048576).toFixed(1).replace(".", ",") + " Mo" : (n/1073741824).toFixed(2).replace(".", ",") + " Go";
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const pct = (g) => (g >= 99 || g < 10 ? g.toFixed(1) : Math.round(g).toString()).replace(".", ",");
+const show = (id, on) => $(id).classList.toggle("hidden", !on);
+
+fetch("/api/config").then((r) => r.json()).then((c) => {
+  $("ver").textContent = "Compression pas à pas v" + c.version;
+  $("src").href = c.source_url;
+}).catch(() => {});
+
+// ---------- application installable
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(() => {});
+window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); deferredInstall = e; show("install", true); });
+$("install").onclick = async () => { if (!deferredInstall) return; deferredInstall.prompt(); await deferredInstall.userChoice; deferredInstall = null; show("install", false); };
+// iPhone / iPad : pas de bouton d'installation automatique, on explique le geste selon le navigateur
+(function iosHint() {
+  const ua = navigator.userAgent;
+  const ios = /iphone|ipad|ipod/i.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  const installed = window.navigator.standalone || window.matchMedia("(display-mode: standalone)").matches;
+  if (!ios || installed) return;
+  const device = /iphone|ipod/i.test(ua) ? "iPhone" : "iPad";
+  let how;
+  if (/CriOS/.test(ua)) how = "touchez le bouton <strong>Partager</strong> dans la barre d'adresse, puis <strong>Sur l'écran d'accueil</strong>";
+  else if (/FxiOS|EdgiOS|OPiOS/.test(ua)) how = "ouvrez le menu du navigateur, touchez <strong>Partager</strong>, puis <strong>Sur l'écran d'accueil</strong>";
+  else how = "touchez <strong>⋯</strong> à côté de l'adresse (ou le bouton <strong>Partager</strong>), puis <strong>Partager</strong> et <strong>Sur l'écran d'accueil</strong>";
+  const el = document.getElementById("iosHint");
+  el.innerHTML = `Pour installer l'application sur votre ${device} : ${how}. Elle s'ouvrira ensuite en plein écran, comme une application.`;
+  el.classList.remove("hidden");
+})();
+
+// ---------- 1. choix et envoi
+$("drop").onclick = () => $("file").click();
+$("drop").onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); $("file").click(); } };
+$("file").onchange = (e) => e.target.files[0] && upload(e.target.files[0]);
+["dragenter","dragover"].forEach((ev) => $("drop").addEventListener(ev, (e) => { e.preventDefault(); $("drop").classList.add("over"); }));
+["dragleave","drop"].forEach((ev) => $("drop").addEventListener(ev, (e) => { e.preventDefault(); $("drop").classList.remove("over"); }));
+$("drop").addEventListener("drop", (e) => e.dataTransfer.files[0] && upload(e.dataTransfer.files[0]));
+
+function upload(file) {
+  $("pickErr").textContent = "";
+  show("upStep", true);
+  const fd = new FormData(); fd.append("file", file);
+  const xhr = new XMLHttpRequest();
+  xhr.open("POST", "/api/files");
+  xhr.upload.onprogress = (e) => { if (e.lengthComputable) { const p = e.loaded / e.total * 100; $("upBar").style.width = p + "%"; $("upPct").textContent = Math.round(p) + " %"; } };
+  xhr.onload = () => {
+    show("upStep", false); $("upBar").style.width = "0";
+    let data = {}; try { data = JSON.parse(xhr.responseText); } catch {}
+    if (xhr.status !== 200) { $("pickErr").textContent = data.detail || "Échec de l'envoi."; return; }
+    openFile(data);
+  };
+  xhr.onerror = () => { show("upStep", false); $("pickErr").textContent = navigator.onLine ? "Échec de l'envoi (connexion interrompue)." : "Vous êtes hors ligne."; };
+  xhr.send(fd);
+}
+
+// ---------- 2. réglages
+function openFile(f) {
+  current = f;
+  $("fName").textContent = f.name;
+  $("fMeta").textContent = f.label + " · " + f.size_h;
+  $("fNotes").innerHTML = [...f.notes, f.legacy_note].filter(Boolean).map((n) => `<div class="note">${esc(n)}</div>`).join("");
+  const form = $("opts"); form.innerHTML = "";
+  for (const o of f.options) {
+    if (o.type === "bool") {
+      form.insertAdjacentHTML("beforeend", `<label class="check"><input type="checkbox" name="${o.key}" ${o.default ? "checked" : ""}><span>${esc(o.label)}</span></label>`);
+    } else {
+      const pills = o.choices.map(([v, l]) => `<label><input type="radio" name="${o.key}" value="${v}" ${v === o.default ? "checked" : ""}><span>${esc(l)}</span></label>`).join("");
+      form.insertAdjacentHTML("beforeend", `<fieldset><legend>${esc(o.label)}</legend><div class="pills">${pills}</div></fieldset>`);
+    }
+  }
+  show("stepPick", false); show("stepDone", false); show("stepOptions", true); show("runStep", false);
+  $("optErr").textContent = "";
+  estimate();
+}
+
+function options() {
+  const out = {};
+  for (const o of current.options) {
+    if (o.type === "bool") out[o.key] = $("opts").elements[o.key].checked;
+    else out[o.key] = $("opts").querySelector(`input[name="${o.key}"]:checked`).value;
+  }
+  return out;
+}
+
+let estDelay = null;
+$("opts").addEventListener("change", (e) => {
+  // la conversion PDF n'a pas d'effet sur la taille du PDF : pas de nouvelle estimation
+  if (e.target.name === "conversion" || e.target.name === "mp3") return;
+  clearTimeout(estDelay); estDelay = setTimeout(estimate, 300);
+});
+
+async function poll(job, onProgress) {
+  while (true) {
+    const r = await fetch("/api/jobs/" + job);
+    if (!r.ok) throw new Error((await r.json()).detail || "Erreur serveur");
+    const j = await r.json();
+    if (j.status === "done") return j;
+    if (j.status === "error") throw new Error(j.message);
+    onProgress(j);
+    await new Promise((res) => setTimeout(res, 700));
+  }
+}
+
+async function estimate() {
+  const token = ++estToken;
+  $("go").disabled = true;
+  show("estWait", true); show("estRes", false);
+  $("est").className = "estimate";
+  $("estStage").textContent = "Estimation du gain…";
+  try {
+    const r = await fetch(`/api/files/${current.id}/estimate`, { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(options()) });
+    if (!r.ok) throw new Error((await r.json()).detail);
+    const j = await poll((await r.json()).job, (j) => {
+      if (token !== estToken) return;
+      $("estStage").textContent = j.queue_position ? `En file d'attente (${j.queue_position})` : "Estimation du gain…";
+      const ind = j.progress < 0 || !j.progress;
+      $("estBarWrap").classList.toggle("indeterminate", ind);
+      $("estBar").style.width = ind ? "" : j.progress + "%";
+    });
+    if (token !== estToken) return;
+    const v = j.result;
+    lastAdvice = v.advice;
+    $("est").className = "estimate " + v.advice;
+    $("estBig").textContent = v.gain_pct > 0 ? `${v.exact ? "" : "≈ "}−${pct(v.gain_pct)} %` : "Aucun gain";
+    $("estMsg").textContent = v.message;
+    show("estWait", false); show("estRes", true);
+    $("go").textContent = v.advice === "ok" ? "Lancer la compression" : "Lancer quand même";
+    $("go").className = v.advice === "ok" ? "primary" : "secondary";
+    $("go").disabled = false;
+  } catch (e) {
+    if (token !== estToken) return;
+    show("estWait", false); show("estRes", true);
+    $("est").className = "estimate aucun"; $("estBig").textContent = "Estimation impossible"; $("estMsg").textContent = e.message;
+    $("go").disabled = false; $("go").textContent = "Lancer quand même"; $("go").className = "secondary";
+  }
+}
+
+// ---------- lancement
+$("go").onclick = async () => {
+  if (lastAdvice !== "ok" && !confirmLow()) return;
+  $("go").disabled = true; $("optErr").textContent = "";
+  $("opts").querySelectorAll("input").forEach((i) => i.disabled = true);
+  show("runStep", true);
+  try {
+    const r = await fetch(`/api/files/${current.id}/run`, { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(options()) });
+    if (!r.ok) throw new Error((await r.json()).detail);
+    const job = (await r.json()).job;
+    const j = await poll(job, (j) => {
+      $("runStage").textContent = j.queue_position ? `En file d'attente (${j.queue_position})` : j.stage;
+      const ind = j.progress < 0;
+      $("runBarWrap").classList.toggle("indeterminate", ind);
+      $("runBar").style.width = ind ? "" : (j.progress || 0) + "%";
+      $("runPct").textContent = ind ? "" : Math.round(j.progress || 0) + " %";
+    });
+    done(job, j.result);
+  } catch (e) {
+    $("optErr").textContent = "Erreur : " + e.message;
+    $("go").disabled = false;
+  } finally {
+    $("opts").querySelectorAll("input").forEach((i) => i.disabled = false);
+  }
+};
+
+let lowConfirmed = false;
+function confirmLow() {
+  if (lowConfirmed) return true;
+  $("optErr").textContent = "Le gain estimé est faible. Appuyez une seconde fois sur « Lancer quand même » pour confirmer.";
+  lowConfirmed = true;
+  setTimeout(() => lowConfirmed = false, 8000);
+  return false;
+}
+
+// ---------- 3. résultat
+function done(job, res) {
+  $("doneBig").textContent = res.gain_pct > 0 ? `−${pct(res.gain_pct)} %` : "Taille inchangée";
+  $("doneMsg").textContent = `${fmtSize(res.original)} → ${fmtSize(res.size)}` + (res.note ? " · " + res.note : "");
+  $("doneFiles").innerHTML = res.files.map((f) => `<li>${esc(f.name)} — ${fmtSize(f.size)}</li>`).join("");
+  $("dl").href = `/api/jobs/${job}/download`;
+  $("dl").textContent = res.files.length > 1 ? "Télécharger (ZIP)" : "Télécharger";
+  show("stepOptions", false); show("stepDone", true);
+}
+
+function reset() { current = null; $("file").value = ""; show("stepOptions", false); show("stepDone", false); show("stepPick", true); }
+$("change").onclick = reset;
+$("again").onclick = reset;
+
+// ---------- fichier partagé depuis le téléphone (/share) ou erreur
+const params = new URLSearchParams(location.search);
+if (params.get("fichier")) {
+  fetch("/api/files/" + encodeURIComponent(params.get("fichier"))).then((r) => r.ok ? r.json() : Promise.reject())
+    .then(openFile).catch(() => { $("pickErr").textContent = "Le fichier partagé est introuvable : choisissez-le à nouveau."; });
+  history.replaceState(null, "", "/");
+} else if (params.get("erreur")) {
+  $("pickErr").textContent = params.get("erreur");
+  history.replaceState(null, "", "/");
+}
+</script>
+</body>
+</html>

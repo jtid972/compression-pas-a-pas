@@ -1,0 +1,19 @@
+# Compression pas à pas — lancement local (Linux, Windows et macOS avec Docker Desktop)
+#   ./scripts/verifier-et-lancer.sh   (conseillé : contrôle Trivy avant lancement)
+#   ou : docker compose up -d --build      puis ouvrir http://localhost:8081
+services:
+  compression-pas-a-pas:
+    build: .
+    image: compression-pas-a-pas:local
+    ports:
+      - "127.0.0.1:8081:8000"   # remplacer par "8081:8000" pour l'ouvrir au réseau local
+    volumes:
+      - cpap-data:/data
+    environment:
+      MIN_GAIN: "10"             # en dessous de ce gain (%), le traitement est déconseillé
+      KEEP_HOURS: "24"           # fichiers supprimés après 24 h
+      # APP_PASSWORD: "change-moi"   # à activer si l'outil est ouvert au réseau
+    restart: unless-stopped
+
+volumes:
+  cpap-data:
