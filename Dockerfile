@@ -7,13 +7,18 @@ ARG APP_VERSION=""
 
 # ffmpeg : vidéos · tesseract : reconnaissance de texte des PDF scannés (français + anglais)
 RUN apt-get update \
+    && apt-get upgrade -y \
     && apt-get install -y --no-install-recommends ffmpeg tesseract-ocr tesseract-ocr-fra tesseract-ocr-eng \
     && rm -rf /var/lib/apt/lists/* \
     && useradd --uid 10001 --create-home --shell /usr/sbin/nologin app
 
 WORKDIR /srv
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# pip n'est utile qu'à l'installation : il est retiré ensuite (ses bibliothèques embarquées
+# font partie de la surface d'attaque analysée par Trivy)
+RUN pip install --no-cache-dir -r requirements.txt \
+    && python -m pip uninstall -y pip \
+    && rm -rf /usr/local/lib/python3*/ensurepip
 
 ENV DATA_DIR=/data \
     PYTHONUNBUFFERED=1 \
