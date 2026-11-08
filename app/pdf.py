@@ -129,7 +129,9 @@ def estimate(path: Path, work: Path, opts: dict, info: dict, progress=lambda p: 
 
 # ------------------------------------------------------------------ conversions
 def _page_png(page, dpi) -> Path:
-    tmp = Path(tempfile.mkstemp(suffix=".png")[1])
+    fd, name = tempfile.mkstemp(suffix=".png")
+    os.close(fd)  # sous Windows, un fichier resté ouvert ne peut être ni réécrit ni supprimé
+    tmp = Path(name)
     page.get_pixmap(dpi=dpi).save(tmp)
     return tmp
 

@@ -85,9 +85,9 @@ def upload(path):
 def estimate_and_run(path, **opts):
     f = upload(path).json()
     est = wait(client.post(f"/api/files/{f['id']}/estimate", json=opts).json()["job"])
-    assert est["status"] == "done", est
+    assert est["status"] == "done", est.get("message")
     run = wait(client.post(f"/api/files/{f['id']}/run", json=opts).json()["job"])
-    assert run["status"] == "done", run
+    assert run["status"] == "done", run.get("message")
     dl = client.get(f"/api/jobs/{run['id']}/download")
     assert dl.status_code == 200
     return f, est["result"], run["result"], dl.content
