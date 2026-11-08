@@ -1,6 +1,6 @@
 # Compression pas à pas — Copyright (c) 2026 Johan TIDAS
 # SPDX-License-Identifier: AGPL-3.0-or-later  (voir LICENSE et NOTICE.md ; licence commerciale possible)
-# Code réalisé avec l'assistance de Claude (IA d'Anthropic) pour la génération de code.
+# Code réalisé avec l'assistance de Claude (IA d'Anthropic) et de Mistral Vibe (IA Mistral) pour la génération de code.
 """Compression pas à pas : allège vidéos, images, documents bureautiques et PDF,
 avec estimation du gain avant lancement."""
 import base64

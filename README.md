@@ -60,4 +60,5 @@ proposez en service en ligne**, et de conserver les mentions d'auteur.
 Une **licence commerciale** est disponible auprès de l'auteur pour un usage sans ces obligations
 (voir la remarque sur PyMuPDF dans [NOTICE.md](NOTICE.md)).
 
-**Code réalisé avec l'assistance de Claude, l'IA d'Anthropic**, pour la génération de code.
+**Code réalisé avec l'assistance de Claude (IA d'Anthropic) et de Mistral Vibe (IA Mistral)**,
+pour la génération de code.

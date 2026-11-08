@@ -1,6 +1,6 @@
 # Compression pas à pas — Copyright (c) 2026 Johan TIDAS
 # SPDX-License-Identifier: AGPL-3.0-or-later
-# Code réalisé avec l'assistance de Claude (IA d'Anthropic) pour la génération de code.
+# Code réalisé avec l'assistance de Claude (IA d'Anthropic) et de Mistral Vibe (IA Mistral) pour la génération de code.
 """Documents bureautiques (Word, PowerPoint, Excel, LibreOffice, OnlyOffice) :
 recompression des images intégrées ; le document garde son format et reste modifiable."""
 import io
