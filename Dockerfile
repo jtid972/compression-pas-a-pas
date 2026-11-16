@@ -1,6 +1,6 @@
 # Compression pas à pas — image (linux/amd64 et linux/arm64)
 # Copyright (c) 2026 Johan TIDAS — AGPL-3.0-or-later
-FROM python:3.13-slim
+FROM python:3.15-slim
 
 # Numéro de version affiché (fourni par le workflow à partir de l'étiquette Git)
 ARG APP_VERSION=""
